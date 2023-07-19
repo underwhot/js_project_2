@@ -33,84 +33,74 @@ document.addEventListener('DOMContentLoaded', function() {
         genreEl = document.querySelector(".promo__genre"),
         promoBgEl = document.querySelector(".promo__bg"),
         promoListEl = document.querySelector(".promo__interactive-list"),
-        filmsForm = document.querySelector('.add'),
-        filmsFormInp = filmsForm.querySelector('.adding__input'),
-        filmsLikeCheck = filmsForm.querySelector('input[type=checkbox]');
+        addForm = document.querySelector('.add'),
+        addInput = addForm.querySelector('.adding__input'),
+        addCheckbox = addForm.querySelector('input[type=checkbox]');
 
   makeChanges();
   removeAdv(advBannersEl);
-  refreshFilmsList();
+  createMovieList(movieDB['movies'], promoListEl);
+
+  addForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    let newFilm = addInput.value.trim();
+    const favorite = addCheckbox.checked;
+
+    if (newFilm) {
+
+      if (newFilm.length > 21) {
+        newFilm = `${newFilm.substring(0,22)}...`;
+      }
+
+      if (favorite) {
+        console.log('Добавляем любимый фильм');
+      }
+
+      movieDB['movies'].push(newFilm);
+      sortArr(movieDB['movies']);
+  
+      createMovieList(movieDB['movies'], promoListEl);
+    }
+
+    e.target.reset();
+    addInput.focus();
+  });
 
   function makeChanges() {
     genreEl.textContent = "Драма";
     promoBgEl.style.cssText = "background: url(./img/bg.jpg) center center/cover no-repeat;";
   }
   
-  function removeAdv(el) {
-    el.forEach(function (banner) {
+  function removeAdv(arr) {
+    arr.forEach(function (banner) {
       banner.remove();
     });
   }
-
-  filmsForm.addEventListener('click', function(e) {
-    if (e.target.tagName === 'BUTTON') {
-      e.preventDefault();
-      addNewFilm();
-      refreshFilmsList();
-    }
-  });
   
-  promoListEl.addEventListener('click', function(e) {
-    if (e.target.classList.contains('delete')) {
-      deleteFilm(e.target);
-      refreshFilmsList();
-    }
-  });
-  
-  function addNewFilm() {
-    let newFilm = filmsFormInp.value.trim();
-    
-    if (newFilm === '') {
-      filmsFormInp.value = '';
-      filmsFormInp.focus();
-      return;
-    }
-  
-    if (newFilm.length > 21) {
-      newFilm = newFilm.slice(0, 21) + '...';
-    }
-  
-    if (filmsLikeCheck) {
-      console.log('Добавляем любимый фильм');
-      filmsLikeCheck.checked = false;
-    }
-  
-    movieDB['movies'].push(newFilm);
-  
-    filmsFormInp.value = '';
-    filmsFormInp.focus();
+  function sortArr(arr) {
+    arr.sort();
   };
   
-  function refreshFilmsList() {
-    promoListEl.innerHTML = '';
-    movieDB['movies'].sort();
+  function createMovieList(filmsDB, parentEl) {
+    parentEl.innerHTML = '';
+    sortArr(filmsDB);
   
-    movieDB['movies'].forEach(function(item, index) {
-      promoListEl.innerHTML += `
+    filmsDB.forEach(function(item, index) {
+      parentEl.innerHTML += `
           <li class="promo__interactive-item">${index+1}. ${item}
             <div class="delete"></div>
           </li>
         `
     });
-  };
-  
-  function deleteFilm(elem) {
-    const delFilm = elem.parentElement.textContent.trim().slice(3);
-  
-    movieDB['movies'].forEach(function(item, i) {
-      if (delFilm === item) {
-        movieDB['movies'].splice(i,1)
-      }
+
+    document.querySelectorAll('.delete').forEach(function(item, i) {
+      item.addEventListener('click', function() {
+        item.parentElement.remove();
+        movieDB['movies'].splice(i,1);
+
+        createMovieList(filmsDB, parentEl);
+      })
     });
   };
 });
